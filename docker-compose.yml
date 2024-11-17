@@ -1,0 +1,43 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash -c "
+      yarn migrate:up
+      && yarn start
+      "
+    depends_on:
+      - postgresdb
+    env_file: ./.env
+    ports:
+      - '9000:9000'
+      - '50000-50999:50000-50999/udp'
+      - '50000-50999:50000-50999/tcp'
+    volumes:
+      - .:/opt/app
+    restart: on-failure
+    networks:
+      - codeshare-network
+
+  postgresdb:
+    image: postgres
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=interview
+    ports:
+      - 5432
+    volumes:
+      - db:/var/lib/postgres
+    networks:
+      - codeshare-network
+
+volumes:
+  db:
+
+networks:
+  codeshare-network:
+    driver: bridge
